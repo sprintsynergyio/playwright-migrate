@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.repository == 'sprintsynergyhq/playwright-migrate'
+    if: github.repository == 'sprintsynergyio/playwright-migrate'
     runs-on: ubuntu-latest
     environment: npm-release
     permissions:

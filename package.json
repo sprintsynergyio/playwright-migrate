@@ -23,11 +23,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sprintsynergyhq/playwright-migrate.git"
+    "url": "git+https://github.com/sprintsynergyio/playwright-migrate.git"
   },
-  "homepage": "https://github.com/sprintsynergyhq/playwright-migrate#readme",
+  "homepage": "https://github.com/sprintsynergyio/playwright-migrate#readme",
   "bugs": {
-    "url": "https://github.com/sprintsynergyhq/playwright-migrate/issues"
+    "url": "https://github.com/sprintsynergyio/playwright-migrate/issues"
   },
   "author": {
     "name": "SprintSynergy",
