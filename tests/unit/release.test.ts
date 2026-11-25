@@ -71,7 +71,7 @@ describe('release', () => {
     expect(workflow).toContain('grep -q E404');
     expect(workflow).toContain('Skipping publish.');
     expect(workflow.indexOf('npm view')).toBeLessThan(workflow.indexOf('npm publish'));
-    expect(workflow).toContain("if: github.repository == 'sprintsynergyhq/playwright-migrate'");
+    expect(workflow).toContain("if: github.repository == 'sprintsynergyio/playwright-migrate'");
     expect(workflow).toContain('persist-credentials: false');
     const uses = workflow.match(/uses: \S+/g) ?? [];
     expect(uses.length).toBe(2);

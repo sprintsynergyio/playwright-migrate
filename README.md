@@ -1,6 +1,82 @@
-# playwright-migrate
+<h1 align="center">playwright-migrate</h1>
+
+<p align="center">
+  <strong>Move Selenium and Cypress tests to Playwright, without silent passes.</strong><br/>
+  <strong>Detect • Migrate • Verify</strong><br/>
+  <sub>Deterministic conversion of Selenium Java, Selenium Python and Cypress JS tests into Playwright Test TypeScript, with a report of everything it could not convert.</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/sprintsynergyio/playwright-migrate/actions/workflows/ci.yml"><img src="https://github.com/sprintsynergyio/playwright-migrate/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://www.npmjs.com/package/@sprintsynergy/playwright-migrate"><img src="https://img.shields.io/npm/v/%40sprintsynergy%2Fplaywright-migrate.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@sprintsynergy/playwright-migrate"><img src="https://img.shields.io/npm/dm/%40sprintsynergy%2Fplaywright-migrate.svg" alt="npm downloads" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D22.13-339933?logo=node.js&logoColor=white" alt="Node 22.13 or newer" />
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> · <a href="#features">Features</a> · <a href="#how-it-works">How it works</a> · <a href="#usage">Usage</a> · <a href="#blocked-patterns">Blocked patterns</a> · <a href="#documentation">Docs</a> · <a href="https://www.npmjs.com/package/@sprintsynergy/playwright-migrate">npm</a>
+</p>
+
+---
 
 `playwright-migrate` is a command line tool that converts Selenium (Java and Python) and Cypress (JavaScript) tests into Playwright Test suites written in TypeScript. It keeps each test's intent, steps, locators and assertions, and it lists anything it cannot convert safely in a report, so nothing turns into a test that passes silently.
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### Deterministic
+
+Each source file is parsed into a syntax tree and mapped through rule tables. There is no guessing and no AI step, so the same input gives the same output.
+
+</td>
+<td width="33%" valign="top">
+
+### Never a silent pass
+
+Anything it cannot convert safely is flagged. A blocked test is emitted as `test.fixme` with its original source kept as a comment, so it can never pass.
+
+</td>
+<td width="33%" valign="top">
+
+### Verified output
+
+`verify` runs the converted specs with Playwright, five times each by default and with no retries, and adds the results to the migration report.
+
+</td>
+</tr>
+</table>
+
+<!-- A short GIF of detect, migrate and verify on the SauceDemo fixtures would help here. Record a real run; do not use a generated image. -->
+
+---
+
+## Quick Start
+
+Node.js 22.13 or later. Install it as a dev dependency in the project you are migrating:
+
+```sh
+npm install -D @sprintsynergy/playwright-migrate
+npx playwright-migrate detect <path>
+npx playwright-migrate migrate path/to/tests --out playwright-migrated
+npx playwright-migrate verify playwright-migrated
+```
+
+`detect` prints the framework for each file. `migrate` writes the specs, a `playwright.config.ts` and `migration-report.json` / `migration-report.md`. `verify` needs `@playwright/test` and Chromium (`npx playwright install chromium`) where the output folder is. Exit codes and every option are in [Usage](#usage). A full run on this repo's fixtures is in [Example](#example).
+
+---
+
+## Features
+
+- **Three sources, one target:** Selenium Java (JUnit 5 and TestNG), Selenium Python (pytest and unittest) and Cypress JS, to Playwright Test in TypeScript. See [Sources And Target](#sources-and-target).
+- **One file or a whole folder:** a folder run mirrors the layout in `--out`, writes one `playwright.config.ts` and one report, and lists files it cannot detect as skipped.
+- **A report per run:** every step is converted, converted with a note, or blocked, with INFO, WARN and BLOCK flags. `migration-report.json` follows [`schemas/migration-report.schema.json`](schemas/migration-report.schema.json).
+- **Blocked patterns:** network intercepts, custom commands, frames, windows and JavaScript executor calls are never guessed. See [Blocked Patterns](#blocked-patterns).
+- **Safe writes:** `migrate` never overwrites a file without `--force`, and `--dry-run` writes nothing.
+- **CI exit codes:** 0 when nothing is blocked, 2 when at least one test is blocked, 1 on an error.
+- **Library API:** `planMigration`, `writeMigration` and `convertSource`, with type declarations. See [Library Use](#library-use).
+- **Mapping reference:** [docs/mapping.md](docs/mapping.md) is generated from the rule tables.
 
 ## Status
 
@@ -16,7 +92,20 @@ Sources:
 
 Target: Playwright Test in TypeScript.
 
+---
+
 ## How It Works
+
+```
+  Selenium Java / Selenium Python / Cypress JS file or folder
+        │
+  detect    framework per file, from its contents
+  parse     each file into a syntax tree (no AI step)
+  map       commands, locators and assertions through the rule tables
+  emit      Playwright Test TypeScript; blocked tests become test.fixme with the source as a comment
+  report    migration-report.json and migration-report.md
+  verify    optional: run the specs with Playwright and add the results to the report
+```
 
 - Deterministic parsing: each source file is parsed into a syntax tree. There is no guessing and no AI step.
 - Mapping tables: each source command, locator and assertion maps to its Playwright form through a table of rules. The full list is in [docs/mapping.md](docs/mapping.md), which is generated from the tables.
@@ -59,6 +148,8 @@ These patterns are never converted. Each one adds a BLOCK flag to the report, an
 - Locators are kept as written. XPath stays XPath, with an INFO flag.
 - Driver setup and teardown are removed with an INFO flag, including remote drivers and their capabilities, so a suite that ran on a Selenium Grid runs locally after conversion. The generated `playwright.config.ts` runs Chromium only, with retries 0.
 - The conversions are checked against the SauceDemo fixtures in this repo. A real suite will usually have more blocked steps. Run `verify` on the result and read the report before you rely on it.
+
+---
 
 ## Usage
 
@@ -188,6 +279,29 @@ console.log(plan.report.summary);
 
 `planMigration` converts in memory and writes nothing. `convertSource` converts the text of one file.
 
+---
+
+## Configuration
+
+There is no config file. Every option is a flag:
+
+| Command           | Options                                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `detect <path>`   | `--json`                                                                                                                   |
+| `migrate <input>` | `--out <dir>` (default `playwright-migrated`), `--from cypress-js\|selenium-python\|selenium-java`, `--dry-run`, `--force` |
+| `verify [dir]`    | `--repeat-each <n>` (default 5)                                                                                            |
+
+`npx playwright-migrate <command> --help` prints the same list. The generated `playwright.config.ts` runs Chromium only, with retries 0.
+
+## Platform notes
+
+- **Node.js 22.13 or later.** CI runs on Ubuntu with Node 22 and 24.
+- **Browsers:** `verify` and the expected specs need Chromium: `npx playwright install chromium`. On Linux, add `--with-deps` if Chromium's system libraries are missing.
+- **Network:** `verify` on the SauceDemo fixtures, `npm run test:pack` and `npm run demo:verify` call the network.
+- **Selenium Grid:** remote driver setup and capabilities are removed with an INFO flag, so the converted suite runs locally.
+
+---
+
 ## Development
 
 Requires Node.js 22.13 or later. To work on the tool itself, clone the repo and run `npm ci` and `npm run build`.
@@ -220,6 +334,20 @@ Changes are listed in [CHANGELOG.md](CHANGELOG.md). To release, a maintainer pus
 
 All fixtures use SauceDemo (https://www.saucedemo.com), a public practice app. Never add client code to this repo. See [fixtures/saucedemo/README.md](fixtures/saucedemo/README.md) for the layout and the expected spec conventions.
 
+## Documentation
+
+| Doc                                                                          | For                                                                 |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [docs/mapping.md](docs/mapping.md)                                           | every source command, locator and assertion and its Playwright form |
+| [schemas/migration-report.schema.json](schemas/migration-report.schema.json) | the migration report JSON Schema                                    |
+| [fixtures/saucedemo/README.md](fixtures/saucedemo/README.md)                 | the fixture layout and expected spec conventions                    |
+| [CONTRIBUTING.md](CONTRIBUTING.md)                                           | working on the tool                                                 |
+| [CHANGELOG.md](CHANGELOG.md)                                                 | release notes                                                       |
+
+## Contributing
+
+Found a bug or have an idea? Open an issue. We review pull requests case by case.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
@@ -227,3 +355,11 @@ MIT. See [LICENSE](LICENSE).
 ---
 
 Built by SprintSynergy (https://sprintsynergy.com) and maintained by [Muhammad Usman](https://linkedin.com/in/sdet-muhammadusman).
+
+---
+
+<p align="center">
+  <strong>Built by <a href="https://sprintsynergy.com">SprintSynergy</a></strong><br/>
+  <sub>SprintSynergy is an AI-based QA automation company: AI testing agents plus our QA team.</sub><br/>
+  <sub>Maintained by <a href="https://linkedin.com/in/sdet-muhammadusman">Muhammad Usman</a>.</sub>
+</p>

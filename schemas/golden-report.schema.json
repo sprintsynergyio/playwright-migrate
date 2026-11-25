@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/sprintsynergyhq/playwright-migrate/schemas/golden-report.schema.json",
+  "$id": "https://github.com/sprintsynergyio/playwright-migrate/schemas/golden-report.schema.json",
   "title": "playwright-migrate Golden Report",
   "description": "The stable part of a file report, compared in golden tests. Messages, step lists and output paths are left out on purpose.",
   "type": "object",

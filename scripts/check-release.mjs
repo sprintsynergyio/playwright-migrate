@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
-export const REPOSITORY_URL = 'git+https://github.com/sprintsynergyhq/playwright-migrate.git';
+export const REPOSITORY_URL = 'git+https://github.com/sprintsynergyio/playwright-migrate.git';
 
 /**
  * Returns the problems that stop `tag` from being published. An empty list means it is ready.
